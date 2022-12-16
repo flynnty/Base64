@@ -48,7 +48,7 @@ char* base64_encode(char* plain) {
 }
 
 
-char* base64_decode(char* cipher) {
+char* base64_decode(char* cipher, size_t *len) {
 
     char counts = 0;
     char buffer[4];
@@ -70,5 +70,7 @@ char* base64_decode(char* cipher) {
     }
 
     plain[p] = '\0';    /* string padding character */
+    *len = p;
+
     return plain;
 }

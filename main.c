@@ -35,15 +35,18 @@ int main(int argc, char* argv[]) {
 }
 
 
-void welcome() {
+void welcome()
+{
+    size_t len;
+
     printf("===============================================================\n");
-    printf("%s", base64_decode("SGF2ZSB0byBkZWFsIHdpdGggQmFzZTY0IGZvcm1hdD8gV2VsY29tZSE="));
+    printf("%s", base64_decode("SGF2ZSB0byBkZWFsIHdpdGggQmFzZTY0IGZvcm1hdD8gV2VsY29tZSE=", &len));
     printf("\n===============================================================\n\n");
 
     usage();
 
     printf("\n===============================================================\n");
-    printf("%s", base64_decode( base64_encode("www.linkedin.com/in/elzoughby")));
+    printf("%s", base64_decode( base64_encode("www.linkedin.com/in/elzoughby"), &len));
     printf("\n===============================================================\n");
 }
 
@@ -60,19 +63,21 @@ void usage() {
 }
 
 
-void do_and_print(char *opt, char *src) {
+void do_and_print(char *opt, char *src)
+{
+    size_t len;
 
     if(file_exists(src)) {
         FILE* file = fopen(src, "r");
         char* line = NULL;
-        size_t len = 0;
+
         if(file == NULL)  exit(1);
         if(strcmp("encode", opt) == 0)
             while(getline(&line, &len, file) != -1)
                 printf("%s\n", base64_encode(line));
         else if(strcmp("decode", opt) == 0)
             while(getline(&line, &len, file) != -1)
-                printf("%s\n", base64_decode(line));
+                printf("%s\n", base64_decode(line, &len));
         else
             args_error();
         fclose(file);
@@ -81,38 +86,53 @@ void do_and_print(char *opt, char *src) {
         if(strcmp("encode", opt) == 0)
             printf("%s", base64_encode(src));
         else if(strcmp("decode", opt) == 0)
-            printf("%s", base64_decode(src));
+            printf("%s", base64_decode(src, &len));
         else
             args_error();
     }
 }
 
 
-void do_and_save(char *opt, char *src, char *dest) {
+void do_and_save(char *opt, char *src, char *dest)
+{
     FILE* dest_file = fopen(dest, "w");
+    size_t len = 0;
+    char *pStr;
+
     if(dest_file == NULL) exit(1);
+
     if(file_exists(src)) {
         FILE* src_file = fopen(src, "r");
         char* line = NULL;
-        size_t len = 0;
-        if(src_file == NULL)  exit(1);
-        if(strcmp("encode", opt) == 0)
-            while (getline(&line, &len, src_file) != -1)
+
+        if(src_file == NULL) exit(1);
+
+        if(strcmp("encode", opt) == 0) {
+            while (getline(&line, &len, src_file) != -1) {
                 fprintf(dest_file, "%s\n" ,base64_encode(line));
-        else if(strcmp("decode", opt) == 0)
-            while (getline(&line, &len, src_file) != -1)
-                fprintf(dest_file, "%s\n", base64_decode(line));
-        else
+            }
+        }
+        else if(strcmp("decode", opt) == 0) {
+            while (getline(&line, &len, src_file) != -1) {
+                pStr = base64_decode(line, &len);
+                fwrite(pStr, 1, len, dest_file);
+            }
+        } else {
             args_error();
+        }
         fclose(src_file);
         if(line) free(line);
     } else {
-        if(strcmp("encode", opt) == 0)
+        if(strcmp("encode", opt) == 0) {
             fprintf(dest_file, "%s", base64_encode(src));
-        else if(strcmp("decode", opt) == 0)
-            fprintf(dest_file , "%s", base64_decode(src));
-        else
+        }
+        else if(strcmp("decode", opt) == 0) {
+            pStr = base64_decode(src, &len);
+            fwrite(pStr, 1, len, dest_file);
+            //fprintf(dest_file , "%s", base64_decode(src, &len));
+        } else {
             args_error();
+        }
     }
     fclose(dest_file);
 }
